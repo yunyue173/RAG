@@ -38,9 +38,12 @@ public class DocumentService {
         this.repository = repository;
     }
 
-    public UploadResponse upload(MultipartFile file) {
+    public UploadResponse upload(String ownerUserId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("请选择需要上传的 PDF 或 TXT 文件");
+        }
+        if (ownerUserId == null || ownerUserId.isBlank()) {
+            throw new IllegalArgumentException("请先登录");
         }
 
         String text = parserService.parse(file);
@@ -66,6 +69,7 @@ public class DocumentService {
         String filename = file.getOriginalFilename() == null ? "未命名文档" : file.getOriginalFilename();
         DocumentRecord document = new DocumentRecord(
                 documentId,
+                ownerUserId,
                 filename,
                 file.getContentType(),
                 file.getSize(),
@@ -75,21 +79,21 @@ public class DocumentService {
         repository.saveDocumentWithChunks(document, chunks);
         storeOriginalFile(documentId, filename, file);
 
-        Conversation conversation = createConversation(documentId, "默认会话");
+        Conversation conversation = createConversation(ownerUserId, documentId, "默认会话");
         return new UploadResponse(document, conversation);
     }
 
-    public List<DocumentRecord> findAllDocuments() {
-        return repository.findAllDocuments();
+    public List<DocumentRecord> findAllDocuments(String ownerUserId) {
+        return repository.findDocumentsByOwner(ownerUserId);
     }
 
-    public DocumentRecord findDocument(String documentId) {
-        return repository.findDocument(documentId)
+    public DocumentRecord findDocument(String ownerUserId, String documentId) {
+        return repository.findDocumentForOwner(documentId, ownerUserId)
                 .orElseThrow(() -> new IllegalArgumentException("文档不存在"));
     }
 
-    public Conversation createConversation(String documentId, String title) {
-        findDocument(documentId);
+    public Conversation createConversation(String ownerUserId, String documentId, String title) {
+        findDocument(ownerUserId, documentId);
         String normalizedTitle = title == null || title.isBlank()
                 ? "新会话"
                 : title.trim();
@@ -103,12 +107,13 @@ public class DocumentService {
         return repository.saveConversation(conversation);
     }
 
-    public List<Conversation> findConversations(String documentId) {
-        findDocument(documentId);
+    public List<Conversation> findConversations(String ownerUserId, String documentId) {
+        findDocument(ownerUserId, documentId);
         return repository.findConversationsByDocument(documentId);
     }
 
-    public void deleteDocument(String documentId) {
+    public void deleteDocument(String ownerUserId, String documentId) {
+        findDocument(ownerUserId, documentId);
         repository.deleteDocument(documentId);
     }
 

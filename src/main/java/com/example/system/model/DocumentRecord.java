@@ -5,6 +5,7 @@ import java.time.Instant;
 public class DocumentRecord {
 
     private String id;
+    private String ownerUserId;
     private String filename;
     private String contentType;
     private long fileSize;
@@ -15,9 +16,10 @@ public class DocumentRecord {
     public DocumentRecord() {
     }
 
-    public DocumentRecord(String id, String filename, String contentType, long fileSize,
+    public DocumentRecord(String id, String ownerUserId, String filename, String contentType, long fileSize,
             int characterCount, int chunkCount, Instant uploadedAt) {
         this.id = id;
+        this.ownerUserId = ownerUserId;
         this.filename = filename;
         this.contentType = contentType;
         this.fileSize = fileSize;
@@ -32,6 +34,14 @@ public class DocumentRecord {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getOwnerUserId() {
+        return ownerUserId;
+    }
+
+    public void setOwnerUserId(String ownerUserId) {
+        this.ownerUserId = ownerUserId;
     }
 
     public String getFilename() {

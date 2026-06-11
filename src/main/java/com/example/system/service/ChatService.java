@@ -29,14 +29,11 @@ public class ChatService {
         this.answerGeneratorService = answerGeneratorService;
     }
 
-    public AskResponse ask(String conversationId, String question, Integer topK) {
+    public AskResponse ask(String ownerUserId, String conversationId, String question, Integer topK) {
         if (question == null || question.isBlank()) {
             throw new IllegalArgumentException("请输入问题");
         }
-        Conversation conversation = repository.findConversation(conversationId)
-                .orElseThrow(() -> new IllegalArgumentException("会话不存在"));
-        repository.findDocument(conversation.getDocumentId())
-                .orElseThrow(() -> new IllegalArgumentException("会话对应的文档不存在"));
+        Conversation conversation = findConversationForOwner(ownerUserId, conversationId);
 
         int actualTopK = topK == null ? properties.getTopK() : topK;
         actualTopK = Math.max(1, Math.min(6, actualTopK));
@@ -65,16 +62,23 @@ public class ChatService {
         return new AskResponse(userMessage, assistantMessage, draft.citations());
     }
 
-    public List<ChatMessage> findMessages(String conversationId) {
-        repository.findConversation(conversationId)
-                .orElseThrow(() -> new IllegalArgumentException("会话不存在"));
+    public List<ChatMessage> findMessages(String ownerUserId, String conversationId) {
+        findConversationForOwner(ownerUserId, conversationId);
         return repository.findMessagesByConversation(conversationId);
     }
 
-    public List<HistorySearchResult> searchHistory(String keyword) {
+    public List<HistorySearchResult> searchHistory(String ownerUserId, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
-        return repository.searchHistory(keyword, 20);
+        return repository.searchHistory(keyword, 20, ownerUserId);
+    }
+
+    private Conversation findConversationForOwner(String ownerUserId, String conversationId) {
+        Conversation conversation = repository.findConversation(conversationId)
+                .orElseThrow(() -> new IllegalArgumentException("会话不存在"));
+        repository.findDocumentForOwner(conversation.getDocumentId(), ownerUserId)
+                .orElseThrow(() -> new IllegalArgumentException("会话不存在"));
+        return conversation;
     }
 }

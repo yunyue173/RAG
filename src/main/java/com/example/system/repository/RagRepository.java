@@ -61,8 +61,21 @@ public class RagRepository {
                 .toList();
     }
 
+    public synchronized List<DocumentRecord> findDocumentsByOwner(String ownerUserId) {
+        return documents.values().stream()
+                .filter(document -> ownerUserId.equals(document.getOwnerUserId()))
+                .sorted(Comparator.comparing(DocumentRecord::getUploadedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .toList();
+    }
+
     public synchronized Optional<DocumentRecord> findDocument(String documentId) {
         return Optional.ofNullable(documents.get(documentId));
+    }
+
+    public synchronized Optional<DocumentRecord> findDocumentForOwner(String documentId, String ownerUserId) {
+        return findDocument(documentId)
+                .filter(document -> ownerUserId.equals(document.getOwnerUserId()));
     }
 
     public synchronized List<DocumentChunk> findChunksByDocument(String documentId) {
@@ -128,6 +141,10 @@ public class RagRepository {
     }
 
     public synchronized List<HistorySearchResult> searchHistory(String keyword, int limit) {
+        return searchHistory(keyword, limit, null);
+    }
+
+    public synchronized List<HistorySearchResult> searchHistory(String keyword, int limit, String ownerUserId) {
         String normalizedKeyword = normalize(keyword);
         if (normalizedKeyword.isBlank()) {
             return List.of();
@@ -136,7 +153,7 @@ public class RagRepository {
         List<HistorySearchResult> results = new ArrayList<>();
         for (Conversation conversation : conversations.values()) {
             DocumentRecord document = documents.get(conversation.getDocumentId());
-            if (document == null) {
+            if (document == null || !belongsToOwner(document, ownerUserId)) {
                 continue;
             }
             boolean conversationMatched = contains(document.getFilename(), normalizedKeyword)
@@ -163,7 +180,7 @@ public class RagRepository {
                 continue;
             }
             DocumentRecord document = documents.get(conversation.getDocumentId());
-            if (document == null) {
+            if (document == null || !belongsToOwner(document, ownerUserId)) {
                 continue;
             }
             results.add(new HistorySearchResult(
@@ -182,6 +199,10 @@ public class RagRepository {
                         Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(Math.max(1, Math.min(50, limit)))
                 .toList();
+    }
+
+    private boolean belongsToOwner(DocumentRecord document, String ownerUserId) {
+        return ownerUserId == null || ownerUserId.equals(document.getOwnerUserId());
     }
 
     private void loadDocuments() throws IOException {

@@ -23,10 +23,14 @@ import com.example.system.dto.UploadResponse;
 import com.example.system.model.ChatMessage;
 import com.example.system.model.Conversation;
 import com.example.system.model.DocumentRecord;
+import com.example.system.model.UserAccount;
 import com.example.system.service.AnswerGeneratorService;
+import com.example.system.service.AuthService;
 import com.example.system.service.ChatService;
 import com.example.system.service.DocumentService;
 import com.example.system.service.embedding.EmbeddingService;
+
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api")
@@ -37,14 +41,16 @@ public class ApiController {
     private final ChatService chatService;
     private final EmbeddingService embeddingService;
     private final AnswerGeneratorService answerGeneratorService;
+    private final AuthService authService;
 
     public ApiController(RagProperties properties, DocumentService documentService, ChatService chatService,
-            EmbeddingService embeddingService, AnswerGeneratorService answerGeneratorService) {
+            EmbeddingService embeddingService, AnswerGeneratorService answerGeneratorService, AuthService authService) {
         this.properties = properties;
         this.documentService = documentService;
         this.chatService = chatService;
         this.embeddingService = embeddingService;
         this.answerGeneratorService = answerGeneratorService;
+        this.authService = authService;
     }
 
     @GetMapping("/status")
@@ -58,47 +64,56 @@ public class ApiController {
     }
 
     @GetMapping("/documents")
-    public List<DocumentRecord> documents() {
-        return documentService.findAllDocuments();
+    public List<DocumentRecord> documents(HttpSession session) {
+        return documentService.findAllDocuments(currentUserId(session));
     }
 
     @PostMapping(value = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public UploadResponse upload(@RequestParam("file") MultipartFile file) {
-        return documentService.upload(file);
+    public UploadResponse upload(@RequestParam("file") MultipartFile file, HttpSession session) {
+        return documentService.upload(currentUserId(session), file);
     }
 
     @DeleteMapping("/documents/{documentId}")
-    public void deleteDocument(@PathVariable String documentId) {
-        documentService.deleteDocument(documentId);
+    public void deleteDocument(@PathVariable String documentId, HttpSession session) {
+        documentService.deleteDocument(currentUserId(session), documentId);
     }
 
     @GetMapping("/documents/{documentId}/conversations")
-    public List<Conversation> conversations(@PathVariable String documentId) {
-        return documentService.findConversations(documentId);
+    public List<Conversation> conversations(@PathVariable String documentId, HttpSession session) {
+        return documentService.findConversations(currentUserId(session), documentId);
     }
 
     @PostMapping("/documents/{documentId}/conversations")
     public Conversation createConversation(@PathVariable String documentId,
-            @RequestBody(required = false) CreateConversationRequest request) {
+            @RequestBody(required = false) CreateConversationRequest request, HttpSession session) {
         String title = request == null ? "新会话" : request.title();
-        return documentService.createConversation(documentId, title);
+        return documentService.createConversation(currentUserId(session), documentId, title);
     }
 
     @GetMapping("/conversations/{conversationId}/messages")
-    public List<ChatMessage> messages(@PathVariable String conversationId) {
-        return chatService.findMessages(conversationId);
+    public List<ChatMessage> messages(@PathVariable String conversationId, HttpSession session) {
+        return chatService.findMessages(currentUserId(session), conversationId);
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
-    public AskResponse ask(@PathVariable String conversationId, @RequestBody AskRequest request) {
+    public AskResponse ask(@PathVariable String conversationId, @RequestBody AskRequest request, HttpSession session) {
         return chatService.ask(
+                currentUserId(session),
                 conversationId,
                 request == null ? null : request.question(),
                 request == null ? null : request.topK());
     }
 
     @GetMapping("/history/search")
-    public List<HistorySearchResult> searchHistory(@RequestParam("keyword") String keyword) {
-        return chatService.searchHistory(keyword);
+    public List<HistorySearchResult> searchHistory(@RequestParam("keyword") String keyword, HttpSession session) {
+        return chatService.searchHistory(currentUserId(session), keyword);
+    }
+
+    private String currentUserId(HttpSession session) {
+        UserAccount user = authService.currentAccount(session);
+        if (user == null) {
+            throw new IllegalArgumentException("请先登录");
+        }
+        return user.getId();
     }
 }
