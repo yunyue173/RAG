@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 基于 RAG 的智能文档问答系统</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="profile-body">
+<main class="profile-shell">
+    <header class="profile-header">
+        <button id="backBtn" class="profile-back" type="button" title="返回">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+        </button>
+        <h1 data-i18n="profileTitle">个人中心</h1>
+    </header>
+
+    <section class="profile-hero">
+        <button id="profilePageAvatar" class="profile-page-avatar" type="button" title="更换头像">用</button>
+        <input id="avatarInput" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp">
+        <div>
+            <h2 id="profileDisplayName">加载中</h2>
+            <button id="clearAvatarBtn" class="text-btn" type="button" data-i18n="clearAvatar">移除头像</button>
+        </div>
+    </section>
+
+    <section class="settings-card">
+        <h2 data-i18n="profileInfo">个人资料</h2>
+        <form id="profileForm" class="settings-form">
+            <label>
+                <span data-i18n="displayName">昵称</span>
+                <input id="displayNameInput" maxlength="20" placeholder="输入昵称">
+            </label>
+            <label>
+                <span data-i18n="bio">简介</span>
+                <textarea id="bioInput" maxlength="80" rows="3" placeholder="简单介绍一下自己"></textarea>
+            </label>
+            <button class="primary-btn" type="submit" data-i18n="saveProfile">保存资料</button>
+            <p id="profileMessage" class="settings-message"></p>
+        </form>
+    </section>
+
+    <section class="settings-card">
+        <h2 data-i18n="accountSecurity">账号安全</h2>
+        <form id="passwordForm" class="settings-form">
+            <label>
+                <span data-i18n="currentPassword">当前密码</span>
+                <input id="currentPasswordInput" type="password" autocomplete="current-password">
+            </label>
+            <label>
+                <span data-i18n="newPassword">新密码</span>
+                <input id="newPasswordInput" type="password" autocomplete="new-password">
+            </label>
+            <button class="secondary-btn" type="submit" data-i18n="changePassword">修改密码</button>
+            <p id="passwordMessage" class="settings-message"></p>
+        </form>
+    </section>
+
+    <section class="settings-card">
+        <h2 data-i18n="preferences">偏好设置</h2>
+        <div class="setting-row">
+            <div>
+                <strong data-i18n="language">语言切换</strong>
+                <span id="languageLabel">简体中文</span>
+            </div>
+            <div class="segmented-control" role="group" aria-label="语言切换">
+                <button class="choice-btn" type="button" data-language="zh-CN">简体中文</button>
+                <button class="choice-btn" type="button" data-language="en-US">English</button>
+            </div>
+        </div>
+        <div class="setting-row">
+            <div>
+                <strong data-i18n="fontSize">文字大小</strong>
+                <span id="fontSizeLabel">标准</span>
+            </div>
+            <div class="segmented-control" role="group" aria-label="文字大小">
+                <button class="choice-btn" type="button" data-font-size="small" data-i18n="small">小</button>
+                <button class="choice-btn" type="button" data-font-size="standard" data-i18n="standard">标准</button>
+                <button class="choice-btn" type="button" data-font-size="large" data-i18n="large">大</button>
+                <button class="choice-btn" type="button" data-font-size="x-large" data-i18n="xLarge">超大</button>
+            </div>
+        </div>
+        <p class="settings-preview" data-i18n="preview">预览：文档问答结果和历史消息会按照当前文字大小显示。</p>
+        <p id="preferenceMessage" class="settings-message"></p>
+    </section>
+
+    <button id="logoutBtn" class="logout-wide-btn" type="button" data-i18n="logout">退出登录</button>
+</main>
+
+<script src="/js/profile.js"></script>
+</body>
+</html>

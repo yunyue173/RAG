@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 基于 RAG 的智能文档问答系统</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="auth-body">
+<main class="auth-shell">
+    <section class="auth-brand">
+        <div class="brand-mark">RAG</div>
+        <div>
+            <h1>智能文档问答系统</h1>
+            <p>支持上传 PDF 或 TXT 文档，系统自动完成文本解析、分块向量化与 Top-K 检索，并结合 LLM 生成带引用的问答结果。</p>
+        </div>
+    </section>
+
+    <section class="auth-card" aria-label="登录注册">
+        <div class="auth-tabs">
+            <button id="loginTab" class="auth-tab active" type="button">登录</button>
+            <button id="registerTab" class="auth-tab" type="button">注册</button>
+        </div>
+
+        <form id="authForm" class="auth-form">
+            <label>
+                <span>用户名</span>
+                <input id="usernameInput" name="username" autocomplete="username" maxlength="20" required>
+            </label>
+            <label>
+                <span>密码</span>
+                <input id="passwordInput" name="password" type="password" autocomplete="current-password" maxlength="32" required>
+            </label>
+            <button id="authSubmitBtn" class="primary-btn" type="submit">登录</button>
+            <p id="authMessage" class="auth-message"></p>
+        </form>
+    </section>
+</main>
+
+<script src="/js/auth.js"></script>
+</body>
+</html>
